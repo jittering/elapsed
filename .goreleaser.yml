@@ -1,0 +1,59 @@
+project_name: elapsed
+
+before:
+  hooks:
+    - make clean
+
+builds:
+  - main: .
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm
+      - arm64
+
+archives:
+  - format: binary
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^build:"
+
+brews:
+  - tap:
+      owner: jittering
+      name: homebrew-kegs
+
+    name: elapsed
+
+    url_template: "https://github.com/jittering/elapsed/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+
+    commit_author:
+      name: Chetan Sarva (via goreleaser)
+      email: chetan@pixelcop.net
+
+    folder: Formula
+
+    homepage: "https://github.com/jittering/elapsed"
+    description: "A simple utility which adds elapsed time markers on every input line"
