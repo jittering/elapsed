@@ -8,6 +8,12 @@ import (
 )
 
 func main() {
+	stat, _ := os.Stdin.Stat()
+	if (stat.Mode() & os.ModeCharDevice) != 0 {
+		fmt.Println("error: stdin not connected to a pipe")
+		os.Exit(1)
+	}
+
 	reader := bufio.NewReader(os.Stdin)
 	start := time.Now()
 	last := time.Now()
