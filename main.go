@@ -8,10 +8,16 @@ import (
 	"time"
 )
 
+var defaultDateTimeLayout = time.RFC3339
+
+var showTS = ""
 var showElapsed = true
 var showDelta = true
 
 func parseFlags() {
+	st := flag.Bool("datetime", false, "Show date/time stamp when message was received")
+	stf := flag.String("format", "", "Date/time format (default: "+defaultDateTimeLayout+")")
+
 	se := flag.Bool("no-elapsed", false, "Do not print the absolute elapsed time")
 	sd := flag.Bool("no-delta", false, "Do not print the delta elapsed time")
 	flag.Parse()
@@ -21,6 +27,13 @@ func parseFlags() {
 	}
 	if sd != nil && *sd {
 		showDelta = false
+	}
+	if st != nil && *st {
+		if stf != nil && *stf != "" {
+			showTS = *stf
+		} else {
+			showTS = defaultDateTimeLayout
+		}
 	}
 }
 
@@ -37,6 +50,12 @@ func main() {
 	}
 
 	f := "["
+	if showTS != "" {
+		f += "%s"
+		if showElapsed || showDelta {
+			f += " | "
+		}
+	}
 	if showElapsed {
 		f += "%-7s"
 	}
@@ -58,6 +77,11 @@ func main() {
 		}
 
 		var args []interface{}
+
+		if showTS != "" {
+			// add current date/time stamp
+			args = append(args, time.Now().Format(showTS))
+		}
 
 		if showElapsed {
 			// absolute elapsed time
