@@ -13,5 +13,8 @@ build:
 release:
 	goreleaser release --rm-dist --skip-validate
 
+check-style:
+	goreleaser --snapshot --rm-dist && brew style ./dist/*.rb
+
 
 .PHONY: clean build

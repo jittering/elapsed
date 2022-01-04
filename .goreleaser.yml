@@ -56,4 +56,4 @@ brews:
     folder: Formula
 
     homepage: "https://github.com/jittering/elapsed"
-    description: "A simple utility which adds elapsed time markers on every input line"
+    description: "Simple utility which adds elapsed time markers on every input line"
