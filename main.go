@@ -5,7 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/mitchellh/go-homedir"
 )
 
 var defaultDateTimeLayout = time.RFC3339
@@ -15,6 +19,30 @@ var showTS = ""
 var showElapsed = true
 var showDelta = true
 var slow int64 = 0
+
+// getArgs from CLI or config file
+func getArgs() []string {
+	args := os.Args[1:]
+	if len(args) != 0 {
+		return args
+	}
+
+	// no cli args given, look for config file
+	dir, err := homedir.Dir()
+	if err != nil {
+		return args
+	}
+	rc := filepath.Join(dir, ".elapsedrc")
+	_, err = os.Stat(rc)
+	if err != nil {
+		return args
+	}
+	b, err := os.ReadFile(rc)
+	if err != nil {
+		return args
+	}
+	return strings.Split(strings.TrimSpace(string(b)), " ")
+}
 
 func parseFlags() {
 	st := flag.Bool("datetime", false, "Show date/time stamp when message was received")
@@ -26,7 +54,7 @@ func parseFlags() {
 	sl := flag.Bool("slow", false, "Show only slow deltas (over a certain threshold)")
 	slm := flag.Int64("slow-ms", defaultSlowThreshold, "Slow delta threshold in ms")
 
-	flag.Parse()
+	flag.CommandLine.Parse(getArgs())
 
 	if se != nil && *se {
 		showElapsed = false
