@@ -48,13 +48,17 @@ alter this behavior:
 
 ```text
   -datetime
-      Show date/time stamp when message was received
+        Show date/time stamp when message was received
   -format string
-      Date/time format (default: 2006-01-02T15:04:05Z07:00)
+        Date/time format (default: 2006-01-02T15:04:05Z07:00)
   -no-delta
-      Do not print the delta elapsed time
+        Do not print the delta elapsed time
   -no-elapsed
-      Do not print the absolute elapsed time
+        Do not print the absolute elapsed time
+  -slow
+        Show only slow deltas (over a certain threshold)
+  -slow-ms int
+        Slow delta threshold in ms (default 500)
 ```
 
 The `-format` flag modifies the date/time string format used in conjunction with
