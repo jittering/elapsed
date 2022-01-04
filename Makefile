@@ -11,7 +11,7 @@ build:
 	echo "built build/elapsed"
 
 release:
-	goreleaser release --rm-dist --parallelism 1 --skip-validate
+	goreleaser release --rm-dist --skip-validate
 
 
 .PHONY: clean build
