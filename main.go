@@ -9,10 +9,12 @@ import (
 )
 
 var defaultDateTimeLayout = time.RFC3339
+var defaultSlowThreshold int64 = 500
 
 var showTS = ""
 var showElapsed = true
 var showDelta = true
+var slow int64 = 0
 
 func parseFlags() {
 	st := flag.Bool("datetime", false, "Show date/time stamp when message was received")
@@ -20,6 +22,10 @@ func parseFlags() {
 
 	se := flag.Bool("no-elapsed", false, "Do not print the absolute elapsed time")
 	sd := flag.Bool("no-delta", false, "Do not print the delta elapsed time")
+
+	sl := flag.Bool("slow", false, "Show only slow deltas (over a certain threshold)")
+	slm := flag.Int64("slow-ms", defaultSlowThreshold, "Slow delta threshold in ms")
+
 	flag.Parse()
 
 	if se != nil && *se {
@@ -34,6 +40,12 @@ func parseFlags() {
 		} else {
 			showTS = defaultDateTimeLayout
 		}
+	}
+	if sl != nil && *sl {
+		slow = defaultSlowThreshold
+	}
+	if slm != nil && *slm != defaultSlowThreshold {
+		slow = *slm
 	}
 }
 
@@ -63,7 +75,7 @@ func main() {
 		if showElapsed {
 			f += " "
 		}
-		f += "+%-7s"
+		f += "%-8s"
 	}
 	f += "] %s"
 
@@ -93,8 +105,12 @@ func main() {
 		if showDelta {
 			// delta between last line
 			delta := time.Since(last).Round(1 * time.Microsecond).Milliseconds()
-			deltaS := fmt.Sprintf("%dms", delta)
-			args = append(args, deltaS)
+			if delta >= slow {
+				deltaS := fmt.Sprintf("+%dms", delta)
+				args = append(args, deltaS)
+			} else {
+				args = append(args, "")
+			}
 		}
 
 		args = append(args, line)
