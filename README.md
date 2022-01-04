@@ -85,6 +85,11 @@ StampMicro = "Jan _2 15:04:05.000000"
 StampNano  = "Jan _2 15:04:05.000000000"
 ```
 
+## Configuration
+
+If you always use the same set of flags, add them to `~/.elapsedrc`. This file
+will be read on startup *if no other CLI flags are given*.
+
 ## License
 
 [MIT](./LICENSE), (c) 2022, Pixelcop Research, Inc.
