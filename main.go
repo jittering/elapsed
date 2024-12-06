@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mitchellh/go-homedir"
@@ -77,18 +80,7 @@ func parseFlags() {
 	}
 }
 
-func main() {
-	parseFlags()
-	if !(showElapsed || showDelta) {
-		fmt.Println("error: must enable either elapsed or delta")
-		os.Exit(1)
-	}
-	stat, _ := os.Stdin.Stat()
-	if (stat.Mode() & os.ModeCharDevice) != 0 {
-		fmt.Println("error: stdin not connected to a pipe")
-		os.Exit(1)
-	}
-
+func run(r io.Reader) {
 	f := "["
 	if showTS != "" {
 		f += "%s"
@@ -107,7 +99,7 @@ func main() {
 	}
 	f += "] %s"
 
-	reader := bufio.NewReader(os.Stdin)
+	reader := bufio.NewReader(r)
 	start := time.Now()
 	last := time.Now()
 	for {
@@ -149,5 +141,62 @@ func main() {
 			// update last line ts
 			last = time.Now()
 		}
+	}
+}
+
+func getReader() (io.Reader, []string) {
+	stat, _ := os.Stdin.Stat()
+	if (stat.Mode() & os.ModeCharDevice) != 0 {
+		// look for cmd
+		args := os.Args[1:]
+		if len(args) != 0 {
+			for i, arg := range args {
+				if arg == "--" && i+1 < len(args) && args[i+1] != "" {
+					return nil, args[i+1:]
+				}
+			}
+		}
+
+		fmt.Println("error: stdin not connected to a pipe")
+		os.Exit(1)
+	}
+
+	return os.Stdin, nil
+}
+
+func runCmd(args []string) {
+	cmd := exec.Command(args[0], args[1:]...)
+	r, w := io.Pipe()
+	cmd.Stdout = w
+	cmd.Stderr = w
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		err := cmd.Start()
+		if err != nil {
+			fmt.Println("error running command: ", err)
+		}
+		go run(r)
+		err = cmd.Wait()
+		if err != nil {
+			fmt.Println("error waiting for command: ", err)
+		}
+		os.Exit(cmd.ProcessState.ExitCode())
+	}()
+	wg.Wait()
+}
+
+func main() {
+	parseFlags()
+	if !(showElapsed || showDelta) {
+		fmt.Println("error: must enable either elapsed or delta")
+		os.Exit(1)
+	}
+
+	r, args := getReader()
+	if args != nil {
+		runCmd(args)
+	} else {
+		run(r)
 	}
 }
